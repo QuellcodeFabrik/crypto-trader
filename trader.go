@@ -6,6 +6,7 @@ import (
     "log"
     "net/http"
     db "./database"
+    integration "./integration"
 )
 
 type Person struct {
@@ -75,6 +76,9 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 func main() {
     log.Print("Go server starting...")
     db.Init()
+
+    integration.TestBitstampIntegration()
+    integration.GetCurrencyValue()
 
     people = append(people, Person{ID: "1", Firstname: "John", Lastname: "Doe", Address: &Address{City: "City X", State: "State X"}})
     people = append(people, Person{ID: "2", Firstname: "Koko", Lastname: "Doe", Address: &Address{City: "City Z", State: "State Y"}})
