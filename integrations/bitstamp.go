@@ -1,4 +1,4 @@
-package integration
+package integrations
 
 import (
     "log"
@@ -10,22 +10,29 @@ import (
 
 const PROXY = "http://proxy.intra.dmc.de:3128"
 
-var supportedCurrencies = [...]string{
-    "btcusd", "btceur",
-    "xrpusd", "xrpeur",
-    "ltcusd", "ltceur",
-    "ethusd", "etheur",
-    "bchusd", "bcheur" }
+type Bitstamp struct {
+    supportedCurrencies []string
+}
 
-func TestBitstampIntegration() {
-    log.Println("Bitstamp Integration")
-    log.Println("Supported currencies:", supportedCurrencies)
+func (bitstamp *Bitstamp) Init() {
+    log.Println("Bitstamp::Init()")
+
+    bitstamp.supportedCurrencies = []string{
+        "btcusd", "btceur",
+        "xrpusd", "xrpeur",
+        "ltcusd", "ltceur",
+        "ethusd", "etheur",
+        "bchusd", "bcheur" }
+
+    log.Println("Supported currencies:", bitstamp.supportedCurrencies)
 
     proxyUrl, _ := url.Parse(PROXY)
     http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
 }
 
-func GetCurrencyValue() {
+func (bitstamp *Bitstamp) GetCurrencyValue() {
+    log.Println("Bitstamp::GetCurrencyValue()")
+
     response, err := http.Get("https://www.bitstamp.net/api/v2/ticker/xrpeur")
     if err != nil {
         log.Println(err)
