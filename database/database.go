@@ -4,13 +4,12 @@ import (
     _ "github.com/go-sql-driver/mysql"
 	"database/sql"
     "log"
-    "fmt"
 )
 
 type CryptoCurrency struct {
-    id      int
-    name    string
-    token   string
+    Id      int     `json:"id"`
+    Name    string  `json:"name"`
+    Token   string  `json:"token"`
 }
 
 // package global database handle
@@ -39,7 +38,9 @@ func Init() {
     }
 }
 
-func GetAvailableCurrencies() {
+func GetAvailableCurrency() CryptoCurrency {
+    log.Println("GetAvailableCurrencies()")
+
     stmtOut, err := db.Prepare("SELECT * FROM Currency WHERE id = ?")
     if err != nil {
         log.Println("Error on statement preparation.")
@@ -50,11 +51,49 @@ func GetAvailableCurrencies() {
 
     var currency CryptoCurrency // we "scan" the result in here
 
-    err = stmtOut.QueryRow(1).Scan(&(currency.id), &(currency.name), &(currency.token)) // WHERE id = 1
+    err = stmtOut.QueryRow(1).Scan(&(currency.Id), &(currency.Name), &(currency.Token)) // WHERE id = 1
     if err != nil {
         log.Println("Error on statement execution.")
         panic(err.Error())
     }
 
-    fmt.Printf("The currency with ID 1 is: %+v \n", currency)
+    return currency
+}
+
+func GetAvailableCurrencies() []CryptoCurrency {
+    log.Println("GetAvailableCurrencies()")
+
+    stmtOut, err := db.Prepare("SELECT * FROM Currency")
+    if err != nil {
+        log.Println("Error on statement preparation.")
+        panic(err.Error())
+    }
+    // close the statement after function is done
+    defer stmtOut.Close()
+
+    var currencies []CryptoCurrency
+
+    rows, err := stmtOut.Query()
+    if err != nil {
+        log.Println("Error on statement execution.")
+        panic(err.Error())
+    }
+
+    defer rows.Close()
+    for rows.Next() {
+        var currency CryptoCurrency
+
+        if err := rows.Scan(&(currency.Id), &(currency.Name), &(currency.Token)); err != nil {
+            log.Fatal(err)
+        }
+
+        currencies = append(currencies, currency)
+    }
+
+    if rows.Err() != nil {
+        log.Println("Error on iterating over rows.")
+        panic(err.Error())
+    }
+
+    return currencies
 }

@@ -30,10 +30,14 @@ func loggingMiddleware(next http.Handler) http.Handler {
     })
 }
 
-func GetPeople(w http.ResponseWriter, r *http.Request) {
-    db.Init()
-    db.GetAvailableCurrencies()
+func GetCurrencies(w http.ResponseWriter, r *http.Request) {
+    currencies := db.GetAvailableCurrencies()
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(&currencies)
+}
 
+func GetPeople(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(people)
 }
 
@@ -68,15 +72,16 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// our main function
 func main() {
     log.Print("Go server starting...")
+    db.Init()
 
     people = append(people, Person{ID: "1", Firstname: "John", Lastname: "Doe", Address: &Address{City: "City X", State: "State X"}})
     people = append(people, Person{ID: "2", Firstname: "Koko", Lastname: "Doe", Address: &Address{City: "City Z", State: "State Y"}})
     people = append(people, Person{ID: "3", Firstname: "Francis", Lastname: "Sunday"})
 
     router := mux.NewRouter()
+    router.HandleFunc("/currencies", GetCurrencies).Methods("GET")
     router.HandleFunc("/people", GetPeople).Methods("GET")
     router.HandleFunc("/people/{id}", GetPerson).Methods("GET")
     router.HandleFunc("/people/{id}", CreatePerson).Methods("POST")
