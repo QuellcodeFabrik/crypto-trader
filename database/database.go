@@ -1,4 +1,4 @@
-package Database
+package database
 
 import (
     _ "github.com/go-sql-driver/mysql"
@@ -39,7 +39,7 @@ func Init() {
 }
 
 func GetAvailableCurrency() CryptoCurrency {
-    log.Println("GetAvailableCurrencies()")
+    log.Println("Database::GetAvailableCurrencies()")
 
     stmtOut, err := db.Prepare("SELECT * FROM Currency WHERE id = ?")
     if err != nil {
@@ -61,7 +61,7 @@ func GetAvailableCurrency() CryptoCurrency {
 }
 
 func GetAvailableCurrencies() []CryptoCurrency {
-    log.Println("GetAvailableCurrencies()")
+    log.Println("Database::GetAvailableCurrencies()")
 
     stmtOut, err := db.Prepare("SELECT * FROM Currency")
     if err != nil {

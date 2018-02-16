@@ -6,7 +6,8 @@ import (
     "log"
     "net/http"
     db "./database"
-    integrations "./integrations"
+    "./integrations"
+    "./aggregator"
 )
 
 type Person struct {
@@ -77,10 +78,7 @@ func main() {
     log.Print("Go server starting...")
     db.Init()
 
-    var bitstampIntegration = integrations.Bitstamp{}
-
-    bitstampIntegration.Init()
-    bitstampIntegration.GetCurrencyValue()
+    aggregator.Init(&integrations.Bitstamp{})
 
     people = append(people, Person{ID: "1", Firstname: "John", Lastname: "Doe", Address: &Address{City: "City X", State: "State X"}})
     people = append(people, Person{ID: "2", Firstname: "Koko", Lastname: "Doe", Address: &Address{City: "City Z", State: "State Y"}})
