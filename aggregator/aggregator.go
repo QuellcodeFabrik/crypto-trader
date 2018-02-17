@@ -1,3 +1,5 @@
+// The aggregator collects data from the given data sources and stores this
+// data in the connected database.
 package aggregator
 
 import (
@@ -8,14 +10,17 @@ import (
     "encoding/json"
 )
 
-func Init(integration integrations.ExchangeIntegration) {
+// Init initializes the aggregator by starting different timers. Those timers
+// are used to collect data from the given crypto-currency exchange platform
+// and to store this data in the connected database.
+func Init(exchange integrations.ExchangeIntegration) {
     log.Println("aggregator::Init()")
 
-    integration.Init()
+    exchange.Init()
 
     channel := make(chan string)
 
-    go startDataAggregationTimer(channel, integration)
+    go startDataAggregationTimer(channel, exchange)
     go startStatisticsTimer(channel)
 
     for {
@@ -25,6 +30,10 @@ func Init(integration integrations.ExchangeIntegration) {
         }
     }
 }
+
+//
+// Private functions
+//
 
 func startDataAggregationTimer(c chan<- string, exchange integrations.ExchangeIntegration) {
     log.Println("aggregator::startDataAggregationTimer()")
@@ -65,7 +74,7 @@ func startStatisticsTimer(c chan<- string) {
         select {
         case <-tick:
             c <- "Statistics"
-            // do something here
+            // TODO implement and trigger statistics evaluation here
         }
     }
 }

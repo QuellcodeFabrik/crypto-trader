@@ -9,6 +9,7 @@ import (
     "./integrations"
     "./aggregator"
     "net/url"
+    "os"
 )
 
 const PROXY = "" // http://proxy.intra.dmc.de:3128"
@@ -72,6 +73,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    log.SetOutput(os.Stdout)
     log.Print("Go server starting...")
 
     if PROXY != "" {

@@ -1,3 +1,5 @@
+// The database package is a collection of database access methods making the
+// storage and retrieval of data convenient and controlled.
 package database
 
 import (
@@ -27,15 +29,13 @@ func (e *Error) Error() string {
 var db *sql.DB = nil
 var availableCurrencies []CryptoCurrency
 
-//
-// Public API
-//
-
 func DeInit() {
     db.Close()
     db = nil
 }
 
+// Init initializes the database connection and does an initial test request to
+// check if the connection is working as expected.
 func Init() {
     if db == nil {
         var err error = nil
@@ -56,7 +56,10 @@ func Init() {
     }
 }
 
-func StoreSnapshot(currencyToken string, snapshot *integrations.CurrencySnapshot) error {
+// StoreSnapshot stores the given snapshot struct in the database taking into
+// account the currency reference under which it is known in the connected
+// currency exchange platform.
+func StoreSnapshot(currencyReference string, snapshot *integrations.CurrencySnapshot) error {
     insert, err := db.Prepare("INSERT INTO snapshot (timestamp, currency, value, low, high, average) " +
         "VALUES( ?, ?, ?, ?, ?, ? )")
 
@@ -65,10 +68,11 @@ func StoreSnapshot(currencyToken string, snapshot *integrations.CurrencySnapshot
     }
     defer insert.Close()
 
-    currency := getCryptoCurrencyByReference(currencyToken, availableCurrencies)
+    currency := getCryptoCurrencyByReference(currencyReference, availableCurrencies)
 
     if currency == nil {
-        return &Error{fmt.Sprintf("Crypto-Currency '%s' is unkown. Cannot insert database.", currencyToken)}
+        return &Error{
+            fmt.Sprintf("Crypto-Currency '%s' is unkown. Cannot insert database.", currencyReference)}
     }
 
     timestamp := time.Unix(snapshot.Timestamp, 0)
