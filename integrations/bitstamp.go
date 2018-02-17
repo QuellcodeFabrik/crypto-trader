@@ -1,3 +1,6 @@
+// The integration package implements the available crypto-currency exchange
+// platforms and offers convenience functions to make use of their
+// capabilities.
 package integrations
 
 import (
@@ -14,7 +17,7 @@ type Bitstamp struct {
 }
 
 func (bitstamp *Bitstamp) Init() {
-    log.Println("Bitstamp::Init()")
+    log.Println("integrations::Bitstamp::Init()")
 
     bitstamp.supportedCurrencies = []string{
         "btceur", "xrpeur", "ltceur", "etheur", "bcheur" }
@@ -27,7 +30,7 @@ func (bitstamp *Bitstamp) GetAvailableCurrencies() []string {
 }
 
 func (bitstamp *Bitstamp) GetCurrencyValue(currency string) CurrencySnapshot {
-    log.Println("Bitstamp::GetCurrencyValue()")
+    log.Println("integrations::Bitstamp::GetCurrencyValue()")
 
     if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
         log.Println("This currency is not supported: " + currency)

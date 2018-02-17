@@ -37,6 +37,8 @@ func DeInit() {
 // Init initializes the database connection and does an initial test request to
 // check if the connection is working as expected.
 func Init() {
+    log.Println("database::Init()")
+
     if db == nil {
         var err error = nil
         db, err = sql.Open("mysql", "root@tcp(127.0.0.1:3306)/crypto_trader")
@@ -60,6 +62,8 @@ func Init() {
 // account the currency reference under which it is known in the connected
 // currency exchange platform.
 func StoreSnapshot(currencyReference string, snapshot *integrations.CurrencySnapshot) error {
+    log.Println("database::StoreSnapshot()")
+
     insert, err := db.Prepare("INSERT INTO snapshot (timestamp, currency, value, low, high, average) " +
         "VALUES( ?, ?, ?, ?, ?, ? )")
 
@@ -85,7 +89,7 @@ func StoreSnapshot(currencyReference string, snapshot *integrations.CurrencySnap
 //
 
 func getAvailableCurrencies() []CryptoCurrency {
-    log.Println("Database::GetAvailableCurrencies()")
+    log.Println("database::GetAvailableCurrencies()")
 
     stmtOut, err := db.Prepare("SELECT * FROM currency")
     if err != nil {
