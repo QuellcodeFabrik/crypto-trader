@@ -4,32 +4,61 @@ import (
     "log"
     "time"
     "../integrations"
+    "encoding/json"
 )
 
-func Init(integration *integrations.Bitstamp) {
+func Init(integration integrations.ExchangeIntegration) {
     log.Println("aggregator::Init()")
 
     integration.Init()
-    currencySnapshot := integration.GetCurrencyValue()
-    log.Printf("%+v\n", currencySnapshot)
 
-    startDataAggregationTimer()
-}
+    channel := make(chan string)
 
-func startDataAggregationTimer() {
-    timeout := time.After(60 * time.Second)
-    tick := time.Tick(10 * time.Second)
+    go startDataAggregationTimer(channel, integration)
+    go startStatisticsTimer(channel)
 
     for {
         select {
-        case <-timeout:
-            log.Println("Timed out")
-        case <-tick:
-            doSomething()
+        case message := <- channel:
+            log.Println(message)
         }
     }
 }
 
-func doSomething() {
-    log.Println("aggregator::doSomething()")
+func startDataAggregationTimer(c chan<- string, exchange integrations.ExchangeIntegration) {
+    log.Println("aggregator::startDataAggregationTimer()")
+
+    availableCurrencies := exchange.GetAvailableCurrencies()
+    numberOfCurrencies := len(availableCurrencies)
+    lastCurrencyUsed := 0
+
+    tick := time.Tick(5 * time.Second)
+
+    for {
+        select {
+        case <-tick:
+            snapshot := exchange.GetCurrencyValue(availableCurrencies[lastCurrencyUsed])
+            out, err := json.Marshal(snapshot)
+            if err != nil {
+                panic (err)
+            }
+            c <- availableCurrencies[lastCurrencyUsed] + ": " + string(out)
+
+            lastCurrencyUsed = (lastCurrencyUsed + 1) % numberOfCurrencies
+        }
+    }
+}
+
+func startStatisticsTimer(c chan<- string) {
+    log.Println("aggregator::startStatisticsTimer()")
+
+    tick := time.Tick(10 * time.Second)
+
+    for {
+        select {
+        case <-tick:
+            c <- "Statistics"
+            // do something here
+        }
+    }
 }

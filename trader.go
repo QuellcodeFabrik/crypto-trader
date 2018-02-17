@@ -8,7 +8,10 @@ import (
     db "./database"
     "./integrations"
     "./aggregator"
+    "net/url"
 )
+
+const PROXY = "" // http://proxy.intra.dmc.de:3128"
 
 type Person struct {
     ID        string   `json:"id,omitempty"`
@@ -76,6 +79,12 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     log.Print("Go server starting...")
+
+    if PROXY != "" {
+        proxyUrl, _ := url.Parse(PROXY)
+        http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+    }
+
     db.Init()
 
     aggregator.Init(&integrations.Bitstamp{})
