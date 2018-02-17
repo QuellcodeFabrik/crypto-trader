@@ -4,18 +4,34 @@ import (
     _ "github.com/go-sql-driver/mysql"
 	"database/sql"
     "log"
+    "../integrations"
+    "fmt"
+    "time"
 )
 
 type CryptoCurrency struct {
-    Id      int     `json:"id"`
-    Name    string  `json:"name"`
-    Token   string  `json:"token"`
+    Id        int     `json:"id"`
+    Name      string  `json:"name"`
+    Token     string  `json:"token"`
+    Reference string  `json:"reference"`
 }
 
-// package global database handle
-var db *sql.DB = nil
+type Error struct {
+    message string
+}
 
-func Deinit() {
+func (e *Error) Error() string {
+    return fmt.Sprintf("Error in database handler: %s", e.message)
+}
+
+var db *sql.DB = nil
+var availableCurrencies []CryptoCurrency
+
+//
+// Public API
+//
+
+func DeInit() {
     db.Close()
     db = nil
 }
@@ -35,35 +51,39 @@ func Init() {
         if err != nil {
             panic(err.Error()) // proper error handling instead of panic in your app
         }
+
+        availableCurrencies = getAvailableCurrencies()
     }
 }
 
-func GetAvailableCurrency() CryptoCurrency {
-    log.Println("Database::GetAvailableCurrencies()")
+func StoreSnapshot(currencyToken string, snapshot *integrations.CurrencySnapshot) error {
+    insert, err := db.Prepare("INSERT INTO snapshot (timestamp, currency, value, low, high, average) " +
+        "VALUES( ?, ?, ?, ?, ?, ? )")
 
-    stmtOut, err := db.Prepare("SELECT * FROM Currency WHERE id = ?")
     if err != nil {
-        log.Println("Error on statement preparation.")
-        panic(err.Error())
+       return err
     }
-    // close the statement after function is done
-    defer stmtOut.Close()
+    defer insert.Close()
 
-    var currency CryptoCurrency // we "scan" the result in here
+    currency := getCryptoCurrencyByReference(currencyToken, availableCurrencies)
 
-    err = stmtOut.QueryRow(1).Scan(&(currency.Id), &(currency.Name), &(currency.Token)) // WHERE id = 1
-    if err != nil {
-        log.Println("Error on statement execution.")
-        panic(err.Error())
+    if currency == nil {
+        return &Error{fmt.Sprintf("Crypto-Currency '%s' is unkown. Cannot insert database.", currencyToken)}
     }
 
-    return currency
+    timestamp := time.Unix(snapshot.Timestamp, 0)
+    _, err = insert.Exec(timestamp, currency.Id, snapshot.Current, snapshot.Low, snapshot.High, snapshot.Average)
+    return err
 }
 
-func GetAvailableCurrencies() []CryptoCurrency {
+//
+// Private functions
+//
+
+func getAvailableCurrencies() []CryptoCurrency {
     log.Println("Database::GetAvailableCurrencies()")
 
-    stmtOut, err := db.Prepare("SELECT * FROM Currency")
+    stmtOut, err := db.Prepare("SELECT * FROM currency")
     if err != nil {
         log.Println("Error on statement preparation.")
         panic(err.Error())
@@ -83,7 +103,7 @@ func GetAvailableCurrencies() []CryptoCurrency {
     for rows.Next() {
         var currency CryptoCurrency
 
-        if err := rows.Scan(&(currency.Id), &(currency.Name), &(currency.Token)); err != nil {
+        if err := rows.Scan(&(currency.Id), &(currency.Name), &(currency.Token), &(currency.Reference)); err != nil {
             log.Fatal(err)
         }
 
@@ -96,4 +116,13 @@ func GetAvailableCurrencies() []CryptoCurrency {
     }
 
     return currencies
+}
+
+func getCryptoCurrencyByReference(reference string, list []CryptoCurrency) *CryptoCurrency {
+    for _, listItem := range list {
+        if listItem.Reference == reference {
+            return &listItem
+        }
+    }
+    return nil
 }

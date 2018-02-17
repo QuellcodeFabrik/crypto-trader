@@ -35,12 +35,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
     })
 }
 
-func GetCurrencies(w http.ResponseWriter, r *http.Request) {
-    currencies := db.GetAvailableCurrencies()
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(&currencies)
-}
-
 func GetPeople(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(people)
@@ -94,7 +88,6 @@ func main() {
     people = append(people, Person{ID: "3", Firstname: "Francis", Lastname: "Sunday"})
 
     router := mux.NewRouter()
-    router.HandleFunc("/currencies", GetCurrencies).Methods("GET")
     router.HandleFunc("/people", GetPeople).Methods("GET")
     router.HandleFunc("/people/{id}", GetPerson).Methods("GET")
     router.HandleFunc("/people/{id}", CreatePerson).Methods("POST")

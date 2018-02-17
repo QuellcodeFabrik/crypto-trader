@@ -1,8 +1,8 @@
 package helper
 
-func IsElementInArray(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
+func IsElementInArray(element string, list []string) bool {
+    for _, listItem := range list {
+        if listItem == element {
             return true
         }
     }

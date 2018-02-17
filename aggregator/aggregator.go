@@ -4,6 +4,7 @@ import (
     "log"
     "time"
     "../integrations"
+    db "../database"
     "encoding/json"
 )
 
@@ -38,6 +39,12 @@ func startDataAggregationTimer(c chan<- string, exchange integrations.ExchangeIn
         select {
         case <-tick:
             snapshot := exchange.GetCurrencyValue(availableCurrencies[lastCurrencyUsed])
+
+            if err := db.StoreSnapshot(availableCurrencies[lastCurrencyUsed], &snapshot); err != nil {
+                log.Printf("Could not store snapshot: %s", err.Error())
+                return
+            }
+
             out, err := json.Marshal(snapshot)
             if err != nil {
                 panic (err)
