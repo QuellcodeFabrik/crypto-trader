@@ -76,32 +76,30 @@ INSERT INTO `currency` VALUES (1,'Ripple','XRP','xrpeur'),(2,'Bitcoin','BTC','bt
 UNLOCK TABLES;
 
 --
--- Table structure for table `history`
+-- Table structure for table `position`
 --
 
-DROP TABLE IF EXISTS `history`;
+DROP TABLE IF EXISTS `position`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `history` (
-  `timestamp` datetime NOT NULL,
+CREATE TABLE `position` (
+  `id` int(11) NOT NULL,
+  `timestamp` datetime DEFAULT NULL,
   `currency` int(11) DEFAULT NULL,
-  `value` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `low` double DEFAULT NULL,
-  `high` double DEFAULT NULL,
-  `average` double DEFAULT NULL COMMENT 'The volume weighted average price over 1 hour',
-  PRIMARY KEY (`timestamp`),
-  KEY `fk_history_currency_idx` (`currency`),
-  CONSTRAINT `fk_history_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  `value` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_position_currency_idx` (`currency`),
+  CONSTRAINT `fk_position_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `history`
+-- Dumping data for table `position`
 --
 
-LOCK TABLES `history` WRITE;
-/*!40000 ALTER TABLE `history` DISABLE KEYS */;
-/*!40000 ALTER TABLE `history` ENABLE KEYS */;
+LOCK TABLES `position` WRITE;
+/*!40000 ALTER TABLE `position` DISABLE KEYS */;
+/*!40000 ALTER TABLE `position` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -127,6 +125,35 @@ CREATE TABLE `settings` (
 LOCK TABLES `settings` WRITE;
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `snapshot`
+--
+
+DROP TABLE IF EXISTS `snapshot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `snapshot` (
+  `timestamp` datetime NOT NULL,
+  `currency` int(11) DEFAULT NULL,
+  `value` varchar(45) COLLATE utf8_bin DEFAULT NULL,
+  `low` double DEFAULT NULL,
+  `high` double DEFAULT NULL,
+  `average` double DEFAULT NULL COMMENT 'The volume weighted average price over 1 hour',
+  PRIMARY KEY (`timestamp`),
+  KEY `fk_history_currency_idx` (`currency`),
+  CONSTRAINT `fk_history_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `snapshot`
+--
+
+LOCK TABLES `snapshot` WRITE;
+/*!40000 ALTER TABLE `snapshot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `snapshot` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -169,7 +196,7 @@ DROP TABLE IF EXISTS `transaction`;
 CREATE TABLE `transaction` (
   `id` int(11) NOT NULL,
   `timestamp` datetime DEFAULT NULL,
-  `type` varchar(45) COLLATE utf8_bin DEFAULT NULL,
+  `type` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT 'Can be one of the following:\n- sell\n- buy\n- deposit\n- withdraw',
   `currency` int(11) DEFAULT NULL,
   `amount` double DEFAULT NULL,
   `value` double DEFAULT NULL,
@@ -198,4 +225,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-16 20:27:40
+-- Dump completed on 2018-02-19  7:16:21
