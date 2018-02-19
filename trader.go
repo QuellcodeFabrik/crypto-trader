@@ -5,7 +5,7 @@ import (
     "github.com/gorilla/mux"
     "log"
     "net/http"
-    db "./database"
+     db "./database"
     "./integrations"
     "./aggregator"
     "./executor"
@@ -13,7 +13,7 @@ import (
     "os"
 )
 
-const PROXY = "" // http://proxy.intra.dmc.de:3128"
+const PROXY = "http://proxy.intra.dmc.de:3128" // ""
 
 type Person struct {
     ID        string   `json:"id,omitempty"`

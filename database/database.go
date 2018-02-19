@@ -18,6 +18,13 @@ type CryptoCurrency struct {
     Reference string  `json:"reference"`
 }
 
+type InvestmentPosition struct {
+    Id        int
+    Amount    int
+    Value     float64
+    Timestamp time.Time
+}
+
 type Error struct {
     message string
 }

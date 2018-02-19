@@ -7,6 +7,7 @@ import (
     "log"
     db "../database"
     "../integrations"
+    "../analyzer"
     "time"
 )
 
@@ -45,9 +46,23 @@ func startExecutionTimer(c chan<- string, exchange integrations.ExchangeIntegrat
     }
 }
 
-func checkPurchasePotential(currency db.CryptoCurrency) float32 {
+func checkPurchasePotentialAndExecute(currency db.CryptoCurrency, snapshot integrations.CurrencySnapshot) {
     log.Println("executor::checkPurchasePotential()")
-    return 0
+
+    // TODO
+    // retrieve existing positions from database and check if there already
+    // are positions for the given currency
+    var existingPositions []db.InvestmentPosition
+
+    existingPositions = append(existingPositions, db.InvestmentPosition{Id: 1, Amount: 1.0, Value: 10.0, Timestamp: time.Now()})
+    existingPositions = append(existingPositions, db.InvestmentPosition{Id: 2, Amount: 1.0, Value: 100.0, Timestamp: time.Now()})
+    existingPositions = append(existingPositions, db.InvestmentPosition{Id: 3, Amount: 1.0, Value: 120.0, Timestamp: time.Now()})
+
+    if snapshot.Current > analyzer.GetOptimalPurchasePrice(currency, existingPositions) {
+        log.Printf("Purchase order for %s will be made now.", currency.Name)
+
+        //
+    }
 }
 
 func checkSalesPotential(currency db.CryptoCurrency) float32 {
