@@ -20,17 +20,13 @@ func TestGetOptimalPurchasePrice(t *testing.T) {
 }
 
 func TestIsPositionEligibleForDivestment(t *testing.T) {
-    shallPositionBeSold := IsPositionEligibleForDivestment(mockPositions[1], 8.0)
-    t.Log(shallPositionBeSold)
-
-    if shallPositionBeSold == false {
+    shallPositionBeSold := IsPositionEligibleForDivestment(mockPositions[1], 2)
+    if shallPositionBeSold != false {
         t.Fail()
     }
 
     shallPositionBeSold = IsPositionEligibleForDivestment(mockPositions[0], 1.1)
-    t.Log(shallPositionBeSold)
-
-    if shallPositionBeSold == true {
+    if shallPositionBeSold != true {
         t.Fail()
     }
 }
