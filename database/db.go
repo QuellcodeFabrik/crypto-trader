@@ -6,7 +6,6 @@ import (
     _ "github.com/go-sql-driver/mysql"
 	"database/sql"
     "log"
-    "../integrations"
     "fmt"
     "time"
 )
@@ -15,11 +14,11 @@ type CryptoCurrency struct {
     Id        int     `json:"id"`
     Name      string  `json:"name"`
     Token     string  `json:"token"`
-    Reference string  `json:"reference"`
 }
 
 type InvestmentPosition struct {
     Id        int
+    Currency  CryptoCurrency
     Amount    int
     Value     float64
     Timestamp time.Time
@@ -65,32 +64,6 @@ func Init() {
     }
 }
 
-// StoreSnapshot stores the given snapshot struct in the database taking into
-// account the currency reference under which it is known in the connected
-// currency exchange platform.
-func StoreSnapshot(currencyReference string, snapshot *integrations.CurrencySnapshot) error {
-    log.Println("database::StoreSnapshot()")
-
-    insert, err := db.Prepare("INSERT INTO snapshot (timestamp, currency, value, low, high, average) " +
-        "VALUES( ?, ?, ?, ?, ?, ? )")
-
-    if err != nil {
-       return err
-    }
-    defer insert.Close()
-
-    currency := getCryptoCurrencyByReference(currencyReference, availableCurrencies)
-
-    if currency == nil {
-        return &Error{
-            fmt.Sprintf("Crypto-Currency '%s' is unkown. Cannot insert database.", currencyReference)}
-    }
-
-    timestamp := time.Unix(snapshot.Timestamp, 0)
-    _, err = insert.Exec(timestamp, currency.Id, snapshot.Current, snapshot.Low, snapshot.High, snapshot.Average)
-    return err
-}
-
 //
 // Private functions
 //
@@ -98,7 +71,7 @@ func StoreSnapshot(currencyReference string, snapshot *integrations.CurrencySnap
 func getAvailableCurrencies() []CryptoCurrency {
     log.Println("database::GetAvailableCurrencies()")
 
-    stmtOut, err := db.Prepare("SELECT * FROM currency")
+    stmtOut, err := db.Prepare("SELECT * FROM Currency")
     if err != nil {
         log.Println("Error on statement preparation.")
         panic(err.Error())
@@ -118,7 +91,7 @@ func getAvailableCurrencies() []CryptoCurrency {
     for rows.Next() {
         var currency CryptoCurrency
 
-        if err := rows.Scan(&(currency.Id), &(currency.Name), &(currency.Token), &(currency.Reference)); err != nil {
+        if err := rows.Scan(&(currency.Id), &(currency.Name), &(currency.Token)); err != nil {
             log.Fatal(err)
         }
 
@@ -133,9 +106,9 @@ func getAvailableCurrencies() []CryptoCurrency {
     return currencies
 }
 
-func getCryptoCurrencyByReference(reference string, list []CryptoCurrency) *CryptoCurrency {
+func getCryptoCurrencyByToken(token string, list []CryptoCurrency) *CryptoCurrency {
     for _, listItem := range list {
-        if listItem.Reference == reference {
+        if listItem.Token == token {
             return &listItem
         }
     }

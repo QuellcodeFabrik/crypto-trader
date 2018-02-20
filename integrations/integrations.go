@@ -7,6 +7,7 @@ type ExchangeIntegration interface {
 }
 
 type CurrencySnapshot struct {
+    Id          int64
     Low         float64   `json:"low,string"`
     High        float64   `json:"high,string"`
     Current     float64   `json:"last,string"`

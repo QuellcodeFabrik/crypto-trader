@@ -1,4 +1,4 @@
-CREATE DATABASE  IF NOT EXISTS `crypto_trader` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE DATABASE  IF NOT EXISTS `crypto_trader` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `crypto_trader`;
 -- MySQL dump 10.13  Distrib 5.7.17, for macos10.12 (x86_64)
 --
@@ -18,202 +18,144 @@ USE `crypto_trader`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `account`
+-- Table structure for table `Configuration`
 --
 
-DROP TABLE IF EXISTS `account`;
+DROP TABLE IF EXISTS `Configuration`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `account` (
-  `id` varchar(45) COLLATE utf8_bin NOT NULL,
-  `currency` int(11) DEFAULT NULL,
-  `amount` double DEFAULT '0',
-  `value` double DEFAULT '0',
-  `timestamp` datetime DEFAULT NULL,
+CREATE TABLE `Configuration` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) NOT NULL,
+  `value` varchar(255) NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  UNIQUE KEY `currency_UNIQUE` (`currency`),
-  CONSTRAINT `fk_account_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  UNIQUE KEY `key` (`key`),
+  UNIQUE KEY `Configuration_key_unique` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `account`
+-- Dumping data for table `Configuration`
 --
 
-LOCK TABLES `account` WRITE;
-/*!40000 ALTER TABLE `account` DISABLE KEYS */;
-/*!40000 ALTER TABLE `account` ENABLE KEYS */;
+LOCK TABLES `Configuration` WRITE;
+/*!40000 ALTER TABLE `Configuration` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Configuration` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `currency`
+-- Table structure for table `Currency`
 --
 
-DROP TABLE IF EXISTS `currency`;
+DROP TABLE IF EXISTS `Currency`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `currency` (
-  `id` int(11) NOT NULL,
-  `name` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `token` varchar(5) COLLATE utf8_bin DEFAULT NULL,
-  `bitstamp_reference` varchar(6) COLLATE utf8_bin DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  UNIQUE KEY `token_UNIQUE` (`token`),
-  UNIQUE KEY `bitstamp_reference_UNIQUE` (`bitstamp_reference`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `currency`
---
-
-LOCK TABLES `currency` WRITE;
-/*!40000 ALTER TABLE `currency` DISABLE KEYS */;
-INSERT INTO `currency` VALUES (1,'Ripple','XRP','xrpeur'),(2,'Bitcoin','BTC','btceur'),(3,'Bitcoin Cash','BCH','bcheur'),(4,'Ethereum','ETH','etheur'),(5,'Litecoin','LTC','ltceur');
-/*!40000 ALTER TABLE `currency` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `position`
---
-
-DROP TABLE IF EXISTS `position`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `position` (
-  `id` int(11) NOT NULL,
-  `timestamp` datetime DEFAULT NULL,
-  `currency` int(11) DEFAULT NULL,
-  `value` double DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_position_currency_idx` (`currency`),
-  CONSTRAINT `fk_position_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `position`
---
-
-LOCK TABLES `position` WRITE;
-/*!40000 ALTER TABLE `position` DISABLE KEYS */;
-/*!40000 ALTER TABLE `position` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `settings`
---
-
-DROP TABLE IF EXISTS `settings`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `settings` (
-  `id` int(11) NOT NULL,
-  `key` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `value` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `changed` datetime DEFAULT NULL,
+CREATE TABLE `Currency` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `token` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `settings`
+-- Dumping data for table `Currency`
 --
 
-LOCK TABLES `settings` WRITE;
-/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
-/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+LOCK TABLES `Currency` WRITE;
+/*!40000 ALTER TABLE `Currency` DISABLE KEYS */;
+INSERT INTO `Currency` VALUES (1,'Bitcoin','BTC'),(2,'Bitcoin Cash','BCH'),(3,'Ripple','XRP'),(4,'Ethereum','ETH'),(5,'Litecoin','LTC');
+/*!40000 ALTER TABLE `Currency` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `snapshot`
+-- Table structure for table `Position`
 --
 
-DROP TABLE IF EXISTS `snapshot`;
+DROP TABLE IF EXISTS `Position`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `snapshot` (
-  `timestamp` datetime NOT NULL,
-  `currency` int(11) DEFAULT NULL,
-  `value` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `low` double DEFAULT NULL,
-  `high` double DEFAULT NULL,
-  `average` double DEFAULT NULL COMMENT 'The volume weighted average price over 1 hour',
-  PRIMARY KEY (`timestamp`),
-  KEY `fk_history_currency_idx` (`currency`),
-  CONSTRAINT `fk_history_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `snapshot`
---
-
-LOCK TABLES `snapshot` WRITE;
-/*!40000 ALTER TABLE `snapshot` DISABLE KEYS */;
-/*!40000 ALTER TABLE `snapshot` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `statistics`
---
-
-DROP TABLE IF EXISTS `statistics`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `statistics` (
-  `timestamp` datetime NOT NULL,
-  `currency` int(11) DEFAULT NULL,
-  `category` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `timeframe` varchar(45) COLLATE utf8_bin DEFAULT NULL,
-  `average` double DEFAULT NULL,
-  `high` double DEFAULT NULL,
-  `low` double DEFAULT NULL,
-  PRIMARY KEY (`timestamp`),
-  KEY `fk_statistics_currency_idx` (`currency`),
-  CONSTRAINT `fk_statistics_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `statistics`
---
-
-LOCK TABLES `statistics` WRITE;
-/*!40000 ALTER TABLE `statistics` DISABLE KEYS */;
-/*!40000 ALTER TABLE `statistics` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `transaction`
---
-
-DROP TABLE IF EXISTS `transaction`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `transaction` (
-  `id` int(11) NOT NULL,
+CREATE TABLE `Position` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `amount` int(11) DEFAULT NULL,
+  `currencyId` int(11) NOT NULL,
   `timestamp` datetime DEFAULT NULL,
-  `type` varchar(45) COLLATE utf8_bin DEFAULT NULL COMMENT 'Can be one of the following:\n- sell\n- buy\n- deposit\n- withdraw',
-  `currency` int(11) DEFAULT NULL,
-  `amount` double DEFAULT NULL,
-  `value` double DEFAULT NULL,
-  `tendency` varchar(15) COLLATE utf8_bin DEFAULT NULL COMMENT 'Can be ‘falling’ or ‘rising’ or ’neutral’. If it is set to ‘falling’, the trade was done when the market was in a downwards movement, for rising it is the opposite. If it is set to ‘neutral’ the average tendency of the market is oscillating around a steady value.',
+  `value` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_transaction_currency_idx` (`currency`),
-  CONSTRAINT `fk_transaction_currency` FOREIGN KEY (`currency`) REFERENCES `currency` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  KEY `currencyId` (`currencyId`),
+  CONSTRAINT `position_ibfk_1` FOREIGN KEY (`currencyId`) REFERENCES `Currency` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `transaction`
+-- Dumping data for table `Position`
 --
 
-LOCK TABLES `transaction` WRITE;
-/*!40000 ALTER TABLE `transaction` DISABLE KEYS */;
-/*!40000 ALTER TABLE `transaction` ENABLE KEYS */;
+LOCK TABLES `Position` WRITE;
+/*!40000 ALTER TABLE `Position` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Position` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `Snapshot`
+--
+
+DROP TABLE IF EXISTS `Snapshot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Snapshot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `currencyId` int(11) NOT NULL,
+  `value` int(11) DEFAULT NULL,
+  `low` int(11) DEFAULT NULL,
+  `high` int(11) DEFAULT NULL,
+  `average` int(11) DEFAULT NULL,
+  `timestamp` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `currencyId` (`currencyId`),
+  CONSTRAINT `snapshot_ibfk_1` FOREIGN KEY (`currencyId`) REFERENCES `Currency` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Snapshot`
+--
+
+LOCK TABLES `Snapshot` WRITE;
+/*!40000 ALTER TABLE `Snapshot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Snapshot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `Transaction`
+--
+
+DROP TABLE IF EXISTS `Transaction`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Transaction` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `amount` int(11) DEFAULT NULL,
+  `currencyId` int(11) NOT NULL,
+  `marketTendency` varchar(255) DEFAULT NULL,
+  `timestamp` datetime DEFAULT NULL,
+  `type` varchar(255) DEFAULT NULL,
+  `value` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `currencyId` (`currencyId`),
+  CONSTRAINT `transaction_ibfk_1` FOREIGN KEY (`currencyId`) REFERENCES `Currency` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Records all transactions to be able to analyze the development of the account';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Transaction`
+--
+
+LOCK TABLES `Transaction` WRITE;
+/*!40000 ALTER TABLE `Transaction` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Transaction` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -225,4 +167,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-19  7:16:21
+-- Dump completed on 2018-02-20 21:02:16

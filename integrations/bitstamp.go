@@ -10,6 +10,7 @@ import (
     "net/http"
     "encoding/json"
     "../helper"
+    "strings"
 )
 
 type Bitstamp struct {
@@ -20,7 +21,7 @@ func (bitstamp *Bitstamp) Init() {
     log.Println("integrations::Bitstamp::Init()")
 
     bitstamp.supportedCurrencies = []string{
-        "btceur", "xrpeur", "ltceur", "etheur", "bcheur" }
+        "BTC", "XRP", "LTC", "ETH", "BCH" }
 
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
 }
@@ -31,6 +32,8 @@ func (bitstamp *Bitstamp) GetAvailableCurrencies() []string {
 
 func (bitstamp *Bitstamp) GetCurrencyValue(currency string) CurrencySnapshot {
     log.Println("integrations::Bitstamp::GetCurrencyValue()")
+
+    currency = strings.ToLower(currency) + "eur"
 
     if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
         log.Println("This currency is not supported: " + currency)

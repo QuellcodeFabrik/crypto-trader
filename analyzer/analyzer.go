@@ -33,7 +33,7 @@ func GetOptimalPurchasePrice(positions []db.InvestmentPosition) float64 {
     // - recent price development
     riskFactor := 1.0
 
-    return referenceValue * (1 - tradeMargin) * riskFactor
+    return referenceValue * (1 - tradeMargin * riskFactor)
 }
 
 // IsCurrencyEligibleForDivestment retrieves historic data for the given currency
@@ -46,5 +46,5 @@ func IsPositionEligibleForDivestment(position db.InvestmentPosition, currentValu
     // - recent price development
     riskFactor := 1.0
 
-    return (position.Value * (1.0 + tradeMargin) * riskFactor) <= currentValue
+    return (position.Value * (1.0 + tradeMargin * riskFactor)) <= currentValue
 }
