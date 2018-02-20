@@ -58,7 +58,7 @@ func checkPurchasePotentialAndExecute(currency db.CryptoCurrency, snapshot integ
     existingPositions = append(existingPositions, db.InvestmentPosition{Id: 2, Amount: 1.0, Value: 100.0, Timestamp: time.Now()})
     existingPositions = append(existingPositions, db.InvestmentPosition{Id: 3, Amount: 1.0, Value: 120.0, Timestamp: time.Now()})
 
-    if snapshot.Current > analyzer.GetOptimalPurchasePrice(currency, existingPositions) {
+    if snapshot.Current > analyzer.GetOptimalPurchasePrice(existingPositions) {
         log.Printf("Purchase order for %s will be made now.", currency.Name)
 
         //
