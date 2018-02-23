@@ -85,6 +85,8 @@ func main() {
     db.Init()
 
     bitstampIntegration := integrations.Bitstamp{}
+    bitstampIntegration.Init()
+
     go aggregator.Init(&bitstampIntegration)
     go executor.Init(&bitstampIntegration)
 

@@ -9,8 +9,11 @@ import (
     "io/ioutil"
     "net/http"
     "encoding/json"
+    "encoding/hex"
     "../helper"
     "strings"
+    "crypto/hmac"
+    "crypto/sha256"
 )
 
 type Bitstamp struct {
@@ -24,6 +27,11 @@ func (bitstamp *Bitstamp) Init() {
         "BTC", "XRP", "LTC", "ETH", "BCH" }
 
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
+
+    nonce := int64(1) // TODO create real nonce
+    signature := createSignature(nonce, ApiAccessData)
+
+    log.Printf("Bitstamp signature: %s", signature)
 }
 
 func (bitstamp *Bitstamp) GetAvailableCurrencies() []string {
@@ -55,4 +63,14 @@ func (bitstamp *Bitstamp) GetCurrencyValue(currency string) CurrencySnapshot {
         json.Unmarshal(contents, &snapshot)
     }
     return snapshot
+}
+
+// createSignature takes a nonce, a customerId and an ApiAccess struct to
+// create and return the signature string out of it that is necessary to send
+// private requests to the Bitstamp API.
+func createSignature(nonce int64, apiCredentials ApiAccess) string {
+    message := []byte(string(nonce) + apiCredentials.CustomerId + apiCredentials.ApiKey)
+    mac := hmac.New(sha256.New, []byte(apiCredentials.ApiSecret))
+    mac.Write(message)
+    return strings.ToUpper(hex.EncodeToString(message))
 }

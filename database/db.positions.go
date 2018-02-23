@@ -16,7 +16,7 @@ type TradingPosition struct {
 
 // GetTradingPositions returns all positions for the given
 // currency or all positions if no currency is given.
-func GetTradingPositions(currency *CryptoCurrency) []TradingPosition {
+func GetTradingPositions(currency *CryptoCurrency) ([]TradingPosition, error) {
     log.Println("database::GetTradingPositions()")
 
     queryString := "SELECT * FROM Position"
@@ -27,8 +27,8 @@ func GetTradingPositions(currency *CryptoCurrency) []TradingPosition {
 
     stmtOut, err := db.Prepare(queryString)
     if err != nil {
-        log.Println("Error on statement preparation.")
-        panic(err.Error())
+        log.Println("Error on preparing database statement.")
+        return nil, err
     }
     defer stmtOut.Close()
 
@@ -37,7 +37,7 @@ func GetTradingPositions(currency *CryptoCurrency) []TradingPosition {
     rows, err := stmtOut.Query()
     if err != nil {
         log.Println("Error on statement execution.")
-        panic(err.Error())
+        return nil, err
     }
 
     defer rows.Close()
@@ -47,7 +47,7 @@ func GetTradingPositions(currency *CryptoCurrency) []TradingPosition {
         if err := rows.Scan(
             &(tradingPosition.Id), &(tradingPosition.Amount), &(tradingPosition.CurrencyId),
             &(tradingPosition.Timestamp), &(tradingPosition.Value)); err != nil {
-            log.Fatal(err)
+            return nil, err
         }
 
         tradingPositions = append(tradingPositions, tradingPosition)
@@ -55,10 +55,10 @@ func GetTradingPositions(currency *CryptoCurrency) []TradingPosition {
 
     if rows.Err() != nil {
         log.Println("Error on iterating over rows.")
-        panic(err.Error())
+        return nil, err
     }
 
-    return tradingPositions
+    return tradingPositions, nil
 }
 
 // AddTradingPosition adds a new position item into the database as soon as the
