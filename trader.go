@@ -7,13 +7,13 @@ import (
     "net/http"
      db "./database"
     "./integrations"
-    "./aggregator"
-    "./executor"
+//    "./aggregator"
+//    "./executor"
     "net/url"
     "os"
 )
 
-const PROXY = "http://proxy.intra.dmc.de:3128" // ""
+const PROXY = "" // "http://proxy.intra.dmc.de:3128"
 
 type Person struct {
     ID        string   `json:"id,omitempty"`
@@ -87,8 +87,10 @@ func main() {
     bitstampIntegration := integrations.Bitstamp{}
     bitstampIntegration.Init()
 
-    go aggregator.Init(&bitstampIntegration)
-    go executor.Init(&bitstampIntegration)
+    bitstampIntegration.GetAccountBalance()
+
+    // go aggregator.Init(&bitstampIntegration)
+    // go executor.Init(&bitstampIntegration)
 
     people = append(people, Person{ID: "1", Firstname: "John", Lastname: "Doe", Address: &Address{City: "City X", State: "State X"}})
     people = append(people, Person{ID: "2", Firstname: "Koko", Lastname: "Doe", Address: &Address{City: "City Z", State: "State Y"}})

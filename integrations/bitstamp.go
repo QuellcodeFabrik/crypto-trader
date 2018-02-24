@@ -14,6 +14,11 @@ import (
     "strings"
     "crypto/hmac"
     "crypto/sha256"
+//    "time"
+    "fmt"
+    "bytes"
+    "strconv"
+    "time"
 )
 
 type Bitstamp struct {
@@ -27,11 +32,14 @@ func (bitstamp *Bitstamp) Init() {
         "BTC", "XRP", "LTC", "ETH", "BCH" }
 
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
+}
 
-    nonce := int64(1) // TODO create real nonce
+func (bitstamp *Bitstamp) GetAccountBalance() {
+    nonce := int(time.Now().Unix())
     signature := createSignature(nonce, ApiAccessData)
 
     log.Printf("Bitstamp signature: %s", signature)
+    sendPostRequest(ApiAccessData.ApiKey, nonce, signature)
 }
 
 func (bitstamp *Bitstamp) GetAvailableCurrencies() []string {
@@ -68,9 +76,31 @@ func (bitstamp *Bitstamp) GetCurrencyValue(currency string) CurrencySnapshot {
 // createSignature takes a nonce, a customerId and an ApiAccess struct to
 // create and return the signature string out of it that is necessary to send
 // private requests to the Bitstamp API.
-func createSignature(nonce int64, apiCredentials ApiAccess) string {
-    message := []byte(string(nonce) + apiCredentials.CustomerId + apiCredentials.ApiKey)
+func createSignature(nonce int, apiCredentials ApiAccess) string {
+    message := []byte(strconv.Itoa(nonce) + apiCredentials.CustomerId + apiCredentials.ApiKey)
     mac := hmac.New(sha256.New, []byte(apiCredentials.ApiSecret))
     mac.Write(message)
-    return strings.ToUpper(hex.EncodeToString(message))
+    return strings.ToUpper(hex.EncodeToString(mac.Sum(nil)))
+}
+
+func sendPostRequest(apiKey string, nonce int, signature string) {
+    url := "https://www.bitstamp.net/api/v2/balance/"
+    log.Printf("POST: %s", url)
+
+    postBody := []byte(fmt.Sprintf(`key=%s&signature=%s&nonce=%d`, apiKey, signature, nonce))
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    log.Println("Response Status:", resp.Status)
+    log.Println("Response Headers:", resp.Header)
+    body, _ := ioutil.ReadAll(resp.Body)
+
+    log.Println("Response Body:", string(body))
 }
