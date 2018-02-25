@@ -24,28 +24,98 @@ type Bitstamp struct {
     supportedCurrencies []string
 }
 
-// CreateBuyOrder BUY LIMIT ORDER
-func (bitstamp *Bitstamp) CreateBuyOrder(amount float32, value float64) *Order {
-    // TODO implement
-    // https://www.bitstamp.net/api/v2/buy/{currency_pair}/
-    //
-    // amount	    Amount
-    // price	    Price
-    // limit_price	If the order gets executed, a new sell order will be placed, with "limit_price" as its price.
+var lastNonce int
 
-    return nil
+// CreateBuyOrder creates a buy order on the Bitstamp platform and gets it
+// executed once the market prices match the given price value.
+func (bitstamp *Bitstamp) CreateBuyOrder(currency string, amount float32, price float64) *Order {
+    log.Println("integrations::Bitstamp::CreateBuyOrder()")
+
+    if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
+        log.Printf("This currency is not supported: %s \n", currency)
+        os.Exit(1)
+    }
+
+    currency = strings.ToLower(currency) + "eur"
+
+    nonce := getNextNonce()
+    signature := createSignature(nonce, ApiAccessData)
+
+    url := "https://www.bitstamp.net/api/v2/buy/" + currency + "/"
+
+    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature) +
+        "&amount=" + strconv.FormatFloat(float64(amount), 'f', -1, 32) +
+        "&price=" + strconv.FormatFloat(price, 'f', -1, 64))
+
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    var order Order
+    client := &http.Client{}
+    resp, err := client.Do(req)
+
+    defer resp.Body.Close()
+    if err != nil {
+        log.Printf("Could not send request: %s\n", err.Error())
+        return nil
+    } else {
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            log.Printf("Could not read response data: %s\n", err.Error())
+            return nil
+        } else if resp.StatusCode > 299 {
+            log.Printf("Failed request: Response code %d: %s\n", resp.StatusCode, string(body))
+            return nil
+        }
+        json.Unmarshal(body, &order)
+    }
+    return &order
 }
 
-// CreateSellOrder SELL LIMIT ORDER
-func (bitstamp *Bitstamp) CreateSellOrder(amount float32, value float64) *Order {
-    // TODO implement
-    // https://www.bitstamp.net/api/v2/sell/{currency_pair}/
-    //
-    // amount	    Amount
-    // price	    Price
-    // limit_price	If the order gets executed, a new buy order will be placed, with "limit_price" as its price
+// CreateSellOrder creates a sell order on the Bitstamp platform and gets it
+// executed once the market prices match the given price value.
+func (bitstamp *Bitstamp) CreateSellOrder(currency string, amount float32, price float64) *Order {
+    log.Println("integrations::Bitstamp::CreateSellOrder()")
 
-    return nil
+    if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
+        log.Printf("This currency is not supported: %s \n", currency)
+        os.Exit(1)
+    }
+
+    currency = strings.ToLower(currency) + "eur"
+
+    nonce := getNextNonce()
+    signature := createSignature(nonce, ApiAccessData)
+
+    url := "https://www.bitstamp.net/api/v2/sell/" + currency + "/"
+
+    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature) +
+        "&amount=" + strconv.FormatFloat(float64(amount), 'f', -1, 32) +
+        "&price=" + strconv.FormatFloat(price, 'f', -1, 64))
+
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    var order Order
+    client := &http.Client{}
+    resp, err := client.Do(req)
+
+    defer resp.Body.Close()
+    if err != nil {
+        log.Printf("Could not send request: %s\n", err.Error())
+        return nil
+    } else {
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            log.Printf("Could not read response data: %s\n", err.Error())
+            return nil
+        } else if resp.StatusCode > 299 {
+            log.Printf("Failed request: Response code %d: %s\n", resp.StatusCode, string(body))
+            return nil
+        }
+        json.Unmarshal(body, &order)
+    }
+    return &order
 }
 
 // GetAccountBalance returns the overall account balance or nil in case
@@ -53,7 +123,7 @@ func (bitstamp *Bitstamp) CreateSellOrder(amount float32, value float64) *Order 
 func (bitstamp *Bitstamp) GetAccountBalance() *AccountBalance {
     log.Println("integrations::Bitstamp::GetAccountBalance()")
 
-    nonce := int(time.Now().Unix())
+    nonce := getNextNonce()
     signature := createSignature(nonce, ApiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/balance/"
@@ -74,6 +144,9 @@ func (bitstamp *Bitstamp) GetAccountBalance() *AccountBalance {
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
             log.Printf("Could not read response data: %s\n", err.Error())
+            return nil
+        } else if resp.StatusCode > 299 {
+            log.Printf("Failed request: Response code %d: %s\n", resp.StatusCode, string(body))
             return nil
         }
         json.Unmarshal(body, &balance)
@@ -127,7 +200,8 @@ func (bitstamp *Bitstamp) GetOpenOrders(currency string) (error, []Order) {
     }
 
     currency = strings.ToLower(currency) + "eur"
-    nonce := int(time.Now().Unix())
+
+    nonce := getNextNonce()
     signature := createSignature(nonce, ApiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/open_orders/" + currency + "/"
@@ -163,6 +237,8 @@ func (bitstamp *Bitstamp) GetOpenOrders(currency string) (error, []Order) {
 // by the respective trading platform integration. All currencies in that list
 // are represented by their token and are kept in capital letters.
 func (bitstamp *Bitstamp) GetSupportedCurrencies() []string {
+    log.Println("integrations::Bitstamp::GetSupportedCurrencies()")
+
     return bitstamp.supportedCurrencies
 }
 
@@ -177,6 +253,13 @@ func (bitstamp *Bitstamp) Init() {
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
 }
 
+// createAuthRequestParameters creates the string that is required in every
+// private request to the Bitstamp API. All additional parameters can be easily
+// appended with an '&' to the string which is returned from this function.
+func createAuthRequestParameters(nonce int, apiKey string, signature string) string {
+    return fmt.Sprintf(`key=%s&signature=%s&nonce=%d`, apiKey, signature, nonce)
+}
+
 // createSignature takes a nonce, a customerId and an ApiAccess struct to
 // create and return the signature string out of it that is necessary to send
 // private requests to the Bitstamp API.
@@ -187,9 +270,15 @@ func createSignature(nonce int, apiCredentials ApiAccess) string {
     return strings.ToUpper(hex.EncodeToString(mac.Sum(nil)))
 }
 
-// createAuthRequestParameters creates the string that is required in every
-// private request to the Bitstamp API. All additional parameters can be easily
-// appended with an '&' to the string which is returned from this function.
-func createAuthRequestParameters(nonce int, apiKey string, signature string) string {
-    return fmt.Sprintf(`key=%s&signature=%s&nonce=%d`, apiKey, signature, nonce)
+// getNextNonce return the next nonce to be used in a request to the Bitstamp
+// API. The method avoids to use the same nonce twice and thereby risking a
+// failing request.
+func getNextNonce() int {
+    tempNonce := int(time.Now().Unix())
+
+    if tempNonce <= lastNonce {
+        tempNonce = lastNonce + 1
+        lastNonce = tempNonce
+    }
+    return tempNonce
 }

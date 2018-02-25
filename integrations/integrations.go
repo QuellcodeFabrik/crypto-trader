@@ -1,10 +1,10 @@
 package integrations
 
 type ExchangeIntegration interface {
-    CreateBuyOrder(amount float32, value float64) *Order
-    CreateSellOrder(amount float32, value float64) *Order
+    CreateBuyOrder(currency string, amount float32, price float64) *Order
+    CreateSellOrder(currency string, amount float32, price float64) *Order
     GetAccountBalance() *AccountBalance
-    GetCurrencySnapshot(token string) *CurrencySnapshot
+    GetCurrencySnapshot(currency string) *CurrencySnapshot
     GetOpenOrders(currency string) (error, []Order)
     GetSupportedCurrencies() []string
     Init()

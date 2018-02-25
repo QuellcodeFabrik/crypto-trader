@@ -87,6 +87,8 @@ func main() {
     bitstampIntegration := integrations.Bitstamp{}
     bitstampIntegration.Init()
 
+    // bitstampIntegration.CreateSellOrder("XRP", 1.0, 0.7986424)
+
     err, orders := bitstampIntegration.GetOpenOrders("XRP")
     if err != nil {
         log.Println("Something went wrong: " + err.Error())
