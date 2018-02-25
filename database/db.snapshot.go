@@ -13,7 +13,7 @@ import (
 func StoreSnapshot(currencyToken string, snapshot *integrations.CurrencySnapshot) error {
     log.Println("database::StoreSnapshot()")
 
-    insert, err := db.Prepare("INSERT INTO Snapshot (timestamp, currency, value, low, high, average) " +
+    insert, err := db.Prepare("INSERT INTO Snapshot (timestamp, currencyId, value, low, high, average) " +
         "VALUES( ?, ?, ?, ?, ?, ? )")
 
     if err != nil {

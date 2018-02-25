@@ -5,7 +5,6 @@ package integrations
 
 import (
     "log"
-    "os"
     "io/ioutil"
     "net/http"
     "encoding/json"
@@ -14,17 +13,161 @@ import (
     "strings"
     "crypto/hmac"
     "crypto/sha256"
-//    "time"
     "fmt"
     "bytes"
     "strconv"
     "time"
+    "os"
 )
 
 type Bitstamp struct {
     supportedCurrencies []string
 }
 
+// CreateBuyOrder BUY LIMIT ORDER
+func (bitstamp *Bitstamp) CreateBuyOrder(amount float32, value float64) *Order {
+    // TODO implement
+    // https://www.bitstamp.net/api/v2/buy/{currency_pair}/
+    //
+    // amount	    Amount
+    // price	    Price
+    // limit_price	If the order gets executed, a new sell order will be placed, with "limit_price" as its price.
+
+    return nil
+}
+
+// CreateSellOrder SELL LIMIT ORDER
+func (bitstamp *Bitstamp) CreateSellOrder(amount float32, value float64) *Order {
+    // TODO implement
+    // https://www.bitstamp.net/api/v2/sell/{currency_pair}/
+    //
+    // amount	    Amount
+    // price	    Price
+    // limit_price	If the order gets executed, a new buy order will be placed, with "limit_price" as its price
+
+    return nil
+}
+
+// GetAccountBalance returns the overall account balance or nil in case
+// something went wrong with the request.
+func (bitstamp *Bitstamp) GetAccountBalance() *AccountBalance {
+    log.Println("integrations::Bitstamp::GetAccountBalance()")
+
+    nonce := int(time.Now().Unix())
+    signature := createSignature(nonce, ApiAccessData)
+
+    url := "https://www.bitstamp.net/api/v2/balance/"
+
+    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature))
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    var balance AccountBalance
+    client := &http.Client{}
+    resp, err := client.Do(req)
+
+    defer resp.Body.Close()
+    if err != nil {
+        log.Printf("Could not send request: %s\n", err.Error())
+        return nil
+    } else {
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            log.Printf("Could not read response data: %s\n", err.Error())
+            return nil
+        }
+        json.Unmarshal(body, &balance)
+    }
+    return &balance
+}
+
+// GetCurrencyValue returns the characteristics of the given currency at the
+// moment of retrieval and returns a CurrencySnapshot data struct or nil in
+// case of an error.
+func (bitstamp *Bitstamp) GetCurrencySnapshot(currency string) *CurrencySnapshot {
+    log.Println("integrations::Bitstamp::GetCurrencyValue()")
+
+    if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
+        log.Printf("This currency is not supported: %s \n", currency)
+        os.Exit(1)
+    }
+
+    currency = strings.ToLower(currency) + "eur"
+
+    var snapshot CurrencySnapshot
+    resp, err := http.Get("https://www.bitstamp.net/api/v2/ticker/" + currency)
+
+    defer resp.Body.Close()
+    if err != nil {
+        log.Printf("Could not send request: %s\n", err.Error())
+        return nil
+    } else {
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            log.Printf("Could not read response data: %s\n", err.Error())
+            return nil
+        } else if resp.StatusCode > 299 {
+            log.Printf("Failed request: Response code %d: %s\n", resp.StatusCode, string(body))
+            return nil
+        }
+        json.Unmarshal(body, &snapshot)
+    }
+    return &snapshot
+}
+
+// GetOpenOrders retrieves all open orders for the given currency. If no open
+// orders are available an empty array is returned. If something goes wrong the
+// the error object is returned.
+func (bitstamp *Bitstamp) GetOpenOrders(currency string) (error, []Order) {
+    log.Println("integrations::Bitstamp::GetOpenOrders()")
+
+    if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
+        log.Printf("This currency is not supported: %s \n", currency)
+        os.Exit(1)
+    }
+
+    currency = strings.ToLower(currency) + "eur"
+    nonce := int(time.Now().Unix())
+    signature := createSignature(nonce, ApiAccessData)
+
+    url := "https://www.bitstamp.net/api/v2/open_orders/" + currency + "/"
+
+    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature))
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+    orders := make([]Order, 0)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+
+    defer resp.Body.Close()
+    if err != nil {
+        log.Printf("Could not send request: %s\n", err.Error())
+        return err, nil
+    } else {
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            log.Printf("Could not read response data: %s\n", err.Error())
+            return err, nil
+        } else if resp.StatusCode > 299 {
+            log.Printf("Failed request: Response code %d: %s\n", resp.StatusCode, string(body))
+            return err, nil
+        }
+        json.Unmarshal(body, &orders)
+    }
+    return nil, orders
+}
+
+// GetSupportedCurrencies returns a list of all currencies that are supported
+// by the respective trading platform integration. All currencies in that list
+// are represented by their token and are kept in capital letters.
+func (bitstamp *Bitstamp) GetSupportedCurrencies() []string {
+    return bitstamp.supportedCurrencies
+}
+
+// Init sets the supported currencies for the Bitstamp integration and prints
+// them to the console.
 func (bitstamp *Bitstamp) Init() {
     log.Println("integrations::Bitstamp::Init()")
 
@@ -32,45 +175,6 @@ func (bitstamp *Bitstamp) Init() {
         "BTC", "XRP", "LTC", "ETH", "BCH" }
 
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
-}
-
-func (bitstamp *Bitstamp) GetAccountBalance() {
-    nonce := int(time.Now().Unix())
-    signature := createSignature(nonce, ApiAccessData)
-
-    log.Printf("Bitstamp signature: %s", signature)
-    sendPostRequest(ApiAccessData.ApiKey, nonce, signature)
-}
-
-func (bitstamp *Bitstamp) GetAvailableCurrencies() []string {
-    return bitstamp.supportedCurrencies
-}
-
-func (bitstamp *Bitstamp) GetCurrencyValue(currency string) CurrencySnapshot {
-    log.Println("integrations::Bitstamp::GetCurrencyValue()")
-
-    currency = strings.ToLower(currency) + "eur"
-
-    if ! helper.IsElementInArray(currency, bitstamp.supportedCurrencies) {
-        log.Println("This currency is not supported: " + currency)
-        os.Exit(1)
-    }
-
-    var snapshot CurrencySnapshot
-    response, err := http.Get("https://www.bitstamp.net/api/v2/ticker/" + currency)
-    if err != nil {
-        log.Println(err)
-        os.Exit(1)
-    } else {
-        defer response.Body.Close()
-        contents, err := ioutil.ReadAll(response.Body)
-        if err != nil {
-            log.Println(err)
-            os.Exit(1)
-        }
-        json.Unmarshal(contents, &snapshot)
-    }
-    return snapshot
 }
 
 // createSignature takes a nonce, a customerId and an ApiAccess struct to
@@ -83,24 +187,9 @@ func createSignature(nonce int, apiCredentials ApiAccess) string {
     return strings.ToUpper(hex.EncodeToString(mac.Sum(nil)))
 }
 
-func sendPostRequest(apiKey string, nonce int, signature string) {
-    url := "https://www.bitstamp.net/api/v2/balance/"
-    log.Printf("POST: %s", url)
-
-    postBody := []byte(fmt.Sprintf(`key=%s&signature=%s&nonce=%d`, apiKey, signature, nonce))
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
-    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-
-    log.Println("Response Status:", resp.Status)
-    log.Println("Response Headers:", resp.Header)
-    body, _ := ioutil.ReadAll(resp.Body)
-
-    log.Println("Response Body:", string(body))
+// createAuthRequestParameters creates the string that is required in every
+// private request to the Bitstamp API. All additional parameters can be easily
+// appended with an '&' to the string which is returned from this function.
+func createAuthRequestParameters(nonce int, apiKey string, signature string) string {
+    return fmt.Sprintf(`key=%s&signature=%s&nonce=%d`, apiKey, signature, nonce)
 }

@@ -38,18 +38,18 @@ func Init(exchange integrations.ExchangeIntegration) {
 func startDataAggregationTimer(c chan<- string, exchange integrations.ExchangeIntegration) {
     log.Println("aggregator::startDataAggregationTimer()")
 
-    availableCurrencies := exchange.GetAvailableCurrencies()
+    availableCurrencies := exchange.GetSupportedCurrencies()
     numberOfCurrencies := len(availableCurrencies)
     lastCurrencyUsed := 0
 
-    tick := time.Tick(5 * time.Second)
+    tick := time.Tick(6 * time.Second)
 
     for {
         select {
         case <-tick:
-            snapshot := exchange.GetCurrencyValue(availableCurrencies[lastCurrencyUsed])
+            snapshot := exchange.GetCurrencySnapshot(availableCurrencies[lastCurrencyUsed])
 
-            if err := db.StoreSnapshot(availableCurrencies[lastCurrencyUsed], &snapshot); err != nil {
+            if err := db.StoreSnapshot(availableCurrencies[lastCurrencyUsed], snapshot); err != nil {
                 log.Printf("Could not store snapshot: %s", err.Error())
                 return
             }

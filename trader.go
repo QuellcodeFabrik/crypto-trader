@@ -87,7 +87,14 @@ func main() {
     bitstampIntegration := integrations.Bitstamp{}
     bitstampIntegration.Init()
 
-    bitstampIntegration.GetAccountBalance()
+    err, orders := bitstampIntegration.GetOpenOrders("XRP")
+    if err != nil {
+        log.Println("Something went wrong: " + err.Error())
+    } else {
+        log.Printf("Open orders: %s\n", orders)
+    }
+
+    // bitstampIntegration.GetAccountBalance()
 
     // go aggregator.Init(&bitstampIntegration)
     // go executor.Init(&bitstampIntegration)
