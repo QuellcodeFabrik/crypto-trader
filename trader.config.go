@@ -1,20 +1,18 @@
 package main
 
-type ApiAccess struct {
-    ApiKey string
-    ApiSecret string
-    CustomerId string
-}
+import (
+    "./integrations"
+)
 
 // This file is not tracked by Git anymore. To track it again do the following
-// git update-index --no-assume-unchanged integrations/config.go
+// git update-index --no-assume-unchanged trader.config.go
 
-var ApiAccessData = ApiAccess{
+var ApiAccessData = integrations.ApiAccess{
     ApiKey: "",
     ApiSecret: "",
     CustomerId: "" }
 
-var TestApiAccessData = ApiAccess{
+var TestApiAccessData = integrations.ApiAccess{
     ApiKey: "apiKeyDEMO",
     ApiSecret: "apiSecretDEMO",
     CustomerId: "12345" }

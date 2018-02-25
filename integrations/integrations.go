@@ -19,6 +19,12 @@ type AccountBalance struct {
     XRP     float64 `json:"xrp_balance,string"`
 }
 
+type ApiAccess struct {
+    ApiKey string
+    ApiSecret string
+    CustomerId string
+}
+
 type CurrencySnapshot struct {
     Id          int64
     Low         float64   `json:"low,string"`

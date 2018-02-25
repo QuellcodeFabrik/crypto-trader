@@ -22,9 +22,9 @@ import (
 
 type Bitstamp struct {
     supportedCurrencies []string
+    apiAccessData ApiAccess
+    lastNonce int
 }
-
-var lastNonce int
 
 // CreateBuyOrder creates a buy order on the Bitstamp platform and gets it
 // executed once the market prices match the given price value.
@@ -38,12 +38,12 @@ func (bitstamp *Bitstamp) CreateBuyOrder(currency string, amount float32, price 
 
     currency = strings.ToLower(currency) + "eur"
 
-    nonce := getNextNonce()
-    signature := createSignature(nonce, ApiAccessData)
+    nonce := bitstamp.getNextNonce()
+    signature := createSignature(nonce, bitstamp.apiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/buy/" + currency + "/"
 
-    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature) +
+    postBody := []byte(createAuthRequestParameters(nonce, bitstamp.apiAccessData.ApiKey, signature) +
         "&amount=" + strconv.FormatFloat(float64(amount), 'f', -1, 32) +
         "&price=" + strconv.FormatFloat(price, 'f', -1, 64))
 
@@ -84,12 +84,12 @@ func (bitstamp *Bitstamp) CreateSellOrder(currency string, amount float32, price
 
     currency = strings.ToLower(currency) + "eur"
 
-    nonce := getNextNonce()
-    signature := createSignature(nonce, ApiAccessData)
+    nonce := bitstamp.getNextNonce()
+    signature := createSignature(nonce, bitstamp.apiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/sell/" + currency + "/"
 
-    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature) +
+    postBody := []byte(createAuthRequestParameters(nonce, bitstamp.apiAccessData.ApiKey, signature) +
         "&amount=" + strconv.FormatFloat(float64(amount), 'f', -1, 32) +
         "&price=" + strconv.FormatFloat(price, 'f', -1, 64))
 
@@ -123,12 +123,12 @@ func (bitstamp *Bitstamp) CreateSellOrder(currency string, amount float32, price
 func (bitstamp *Bitstamp) GetAccountBalance() *AccountBalance {
     log.Println("integrations::Bitstamp::GetAccountBalance()")
 
-    nonce := getNextNonce()
-    signature := createSignature(nonce, ApiAccessData)
+    nonce := bitstamp.getNextNonce()
+    signature := createSignature(nonce, bitstamp.apiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/balance/"
 
-    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature))
+    postBody := []byte(createAuthRequestParameters(nonce, bitstamp.apiAccessData.ApiKey, signature))
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
     req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -201,12 +201,12 @@ func (bitstamp *Bitstamp) GetOpenOrders(currency string) (error, []Order) {
 
     currency = strings.ToLower(currency) + "eur"
 
-    nonce := getNextNonce()
-    signature := createSignature(nonce, ApiAccessData)
+    nonce := bitstamp.getNextNonce()
+    signature := createSignature(nonce, bitstamp.apiAccessData)
 
     url := "https://www.bitstamp.net/api/v2/open_orders/" + currency + "/"
 
-    postBody := []byte(createAuthRequestParameters(nonce, ApiAccessData.ApiKey, signature))
+    postBody := []byte(createAuthRequestParameters(nonce, bitstamp.apiAccessData.ApiKey, signature))
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
     req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -243,14 +243,28 @@ func (bitstamp *Bitstamp) GetSupportedCurrencies() []string {
 }
 
 // Init sets the supported currencies for the Bitstamp integration and prints
-// them to the console.
-func (bitstamp *Bitstamp) Init() {
+// them to the console. It additionally assigns the API access data that is
+// required to send private request to the Bitstamp API.
+func (bitstamp *Bitstamp) Init(apiAccessData ApiAccess) {
     log.Println("integrations::Bitstamp::Init()")
 
+    bitstamp.apiAccessData = apiAccessData
     bitstamp.supportedCurrencies = []string{
         "BTC", "XRP", "LTC", "ETH", "BCH" }
 
     log.Println("Supported currencies:", bitstamp.supportedCurrencies)
+}
+
+// getNextNonce return the next nonce to be used in a request to the Bitstamp
+// API. The method avoids to use the same nonce twice and thereby risking a
+// failing request.
+func (bitstamp *Bitstamp) getNextNonce() int {
+    if bitstamp.lastNonce == 0 {
+        bitstamp.lastNonce = int(time.Now().Unix())
+    } else {
+        bitstamp.lastNonce = bitstamp.lastNonce + 1
+    }
+    return bitstamp.lastNonce
 }
 
 // createAuthRequestParameters creates the string that is required in every
@@ -268,17 +282,4 @@ func createSignature(nonce int, apiCredentials ApiAccess) string {
     mac := hmac.New(sha256.New, []byte(apiCredentials.ApiSecret))
     mac.Write(message)
     return strings.ToUpper(hex.EncodeToString(mac.Sum(nil)))
-}
-
-// getNextNonce return the next nonce to be used in a request to the Bitstamp
-// API. The method avoids to use the same nonce twice and thereby risking a
-// failing request.
-func getNextNonce() int {
-    tempNonce := int(time.Now().Unix())
-
-    if tempNonce <= lastNonce {
-        tempNonce = lastNonce + 1
-        lastNonce = tempNonce
-    }
-    return tempNonce
 }

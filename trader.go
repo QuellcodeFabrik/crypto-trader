@@ -7,8 +7,6 @@ import (
     "net/http"
      db "./database"
     "./integrations"
-//    "./aggregator"
-//    "./executor"
     "net/url"
     "os"
 )
@@ -85,7 +83,7 @@ func main() {
     db.Init()
 
     bitstampIntegration := integrations.Bitstamp{}
-    bitstampIntegration.Init()
+    bitstampIntegration.Init(ApiAccessData)
 
     // bitstampIntegration.CreateSellOrder("XRP", 1.0, 0.7986424)
 
