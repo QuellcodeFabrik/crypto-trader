@@ -16,14 +16,6 @@ type CryptoCurrency struct {
     Token     string  `json:"token"`
 }
 
-type InvestmentPosition struct {
-    Id        int
-    Currency  CryptoCurrency
-    Amount    int
-    Value     float64
-    Timestamp time.Time
-}
-
 type Error struct {
     message string
 }
@@ -34,6 +26,8 @@ func (e *Error) Error() string {
 
 var db *sql.DB = nil
 var availableCurrencies []CryptoCurrency
+var transactionTypes = []string{ "sell", "buy", "deposit", "withdraw" }
+var marketTendencies = []string{ "falling", "rising", "neutral" }
 
 func DeInit() {
     db.Close()

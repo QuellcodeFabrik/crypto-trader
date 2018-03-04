@@ -1,5 +1,10 @@
 package integrations
 
+import (
+    "sync"
+    "time"
+)
+
 type ExchangeIntegration interface {
     CreateBuyOrder(currency string, amount float32, price float64) *Order
     CreateSellOrder(currency string, amount float32, price float64) *Order
@@ -7,7 +12,29 @@ type ExchangeIntegration interface {
     GetCurrencySnapshot(currency string) *CurrencySnapshot
     GetOpenOrders(currency string) (error, []Order)
     GetSupportedCurrencies() []string
+    HasFreeRequestSlot() bool
     Init()
+}
+
+type TimeSlot struct {
+    mutex     sync.Mutex
+    interval  int64
+    last      int64
+}
+
+func (s *TimeSlot) Init(interval int64) {
+    s.interval = interval
+}
+
+func (s *TimeSlot) IsFree() bool {
+    s.mutex.Lock()
+    if s.last > time.Now().Unix() - s.interval {
+        return false
+    } else {
+        s.last = time.Now().Unix()
+        return true
+    }
+    s.mutex.Unlock()
 }
 
 type AccountBalance struct {

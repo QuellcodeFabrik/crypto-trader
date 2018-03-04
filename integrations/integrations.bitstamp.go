@@ -18,12 +18,17 @@ import (
     "strconv"
     "time"
     "os"
+    "sync"
+    "encoding/asn1"
 )
+
+var once sync.Once
 
 type Bitstamp struct {
     supportedCurrencies []string
     apiAccessData ApiAccess
     lastNonce int
+    timeSlot *TimeSlot
 }
 
 // CreateBuyOrder creates a buy order on the Bitstamp platform and gets it
@@ -52,9 +57,13 @@ func (bitstamp *Bitstamp) CreateBuyOrder(currency string, amount float32, price 
 
     var order Order
     client := &http.Client{}
-    resp, err := client.Do(req)
 
+    // wait until free request slot is available
+    for !bitstamp.HasFreeRequestSlot() {}
+
+    resp, err := client.Do(req)
     defer resp.Body.Close()
+
     if err != nil {
         log.Printf("Could not send request: %s\n", err.Error())
         return nil
@@ -98,9 +107,13 @@ func (bitstamp *Bitstamp) CreateSellOrder(currency string, amount float32, price
 
     var order Order
     client := &http.Client{}
-    resp, err := client.Do(req)
 
+    // wait until free request slot is available
+    for !bitstamp.HasFreeRequestSlot() {}
+
+    resp, err := client.Do(req)
     defer resp.Body.Close()
+
     if err != nil {
         log.Printf("Could not send request: %s\n", err.Error())
         return nil
@@ -134,9 +147,13 @@ func (bitstamp *Bitstamp) GetAccountBalance() *AccountBalance {
 
     var balance AccountBalance
     client := &http.Client{}
-    resp, err := client.Do(req)
 
+    // wait until free request slot is available
+    for !bitstamp.HasFreeRequestSlot() {}
+
+    resp, err := client.Do(req)
     defer resp.Body.Close()
+
     if err != nil {
         log.Printf("Could not send request: %s\n", err.Error())
         return nil
@@ -168,9 +185,13 @@ func (bitstamp *Bitstamp) GetCurrencySnapshot(currency string) *CurrencySnapshot
     currency = strings.ToLower(currency) + "eur"
 
     var snapshot CurrencySnapshot
-    resp, err := http.Get("https://www.bitstamp.net/api/v2/ticker/" + currency)
 
+    // wait until free request slot is available
+    for !bitstamp.HasFreeRequestSlot() {}
+
+    resp, err := http.Get("https://www.bitstamp.net/api/v2/ticker/" + currency)
     defer resp.Body.Close()
+
     if err != nil {
         log.Printf("Could not send request: %s\n", err.Error())
         return nil
@@ -211,11 +232,14 @@ func (bitstamp *Bitstamp) GetOpenOrders(currency string) (error, []Order) {
     req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
     orders := make([]Order, 0)
-
     client := &http.Client{}
-    resp, err := client.Do(req)
 
+    // wait until free request slot is available
+    for !bitstamp.HasFreeRequestSlot() {}
+
+    resp, err := client.Do(req)
     defer resp.Body.Close()
+
     if err != nil {
         log.Printf("Could not send request: %s\n", err.Error())
         return err, nil
@@ -242,11 +266,22 @@ func (bitstamp *Bitstamp) GetSupportedCurrencies() []string {
     return bitstamp.supportedCurrencies
 }
 
+// HasFreeRequestSlot uses the timeslot implementation to check if there is a
+// free request timeslot. It has to wait as long as there is not free slot.
+func (bitstamp *Bitstamp) HasFreeRequestSlot() bool {
+    return bitstamp.timeSlot.IsFree()
+}
+
 // Init sets the supported currencies for the Bitstamp integration and prints
 // them to the console. It additionally assigns the API access data that is
 // required to send private request to the Bitstamp API.
 func (bitstamp *Bitstamp) Init(apiAccessData ApiAccess) {
     log.Println("integrations::Bitstamp::Init()")
+
+    bitstamp.timeSlot = &TimeSlot{}
+    once.Do(func() {
+        bitstamp.timeSlot.Init(1500)
+    })
 
     bitstamp.apiAccessData = apiAccessData
     bitstamp.supportedCurrencies = []string{
