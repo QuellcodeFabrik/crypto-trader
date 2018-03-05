@@ -4,7 +4,6 @@ import (
     "log"
     "fmt"
     "time"
-    "../integrations"
 )
 
 type Transaction struct {
