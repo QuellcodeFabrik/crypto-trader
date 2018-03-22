@@ -11,7 +11,7 @@ import (
     "os"
 )
 
-const PROXY = "" // "http://proxy.intra.dmc.de:3128"
+const PROXY = ""
 
 type Person struct {
     ID        string   `json:"id,omitempty"`
