@@ -4,10 +4,9 @@ package database
 
 import (
     _ "github.com/go-sql-driver/mysql"
-	"database/sql"
+    "database/sql"
     "log"
     "fmt"
-    "time"
 )
 
 type CryptoCurrency struct {

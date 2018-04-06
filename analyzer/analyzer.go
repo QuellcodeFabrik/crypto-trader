@@ -14,7 +14,7 @@ const tradeMargin = 0.05
 // the database and calculates characteristics that help to identify the
 // optimal purchase price for that currency to make significant gains in the
 // near future.
-func GetOptimalPurchasePrice(positions []db.InvestmentPosition) float64 {
+func GetOptimalPurchasePrice(positions []db.TradingPosition) float64 {
     var referenceValue float64
     for _, position := range positions {
         if referenceValue == 0 || position.Value < referenceValue {
@@ -39,7 +39,7 @@ func GetOptimalPurchasePrice(positions []db.InvestmentPosition) float64 {
 // IsCurrencyEligibleForDivestment retrieves historic data for the given currency
 // from the database and calculates characteristics that help to identify if now
 // is the right time to sell it for the given value.
-func IsPositionEligibleForDivestment(position db.InvestmentPosition, currentValue float64) bool {
+func IsPositionEligibleForDivestment(position db.TradingPosition, currentValue float64) bool {
 
     // TODO calculate the risk factor and take into account the following:
     // - volatility

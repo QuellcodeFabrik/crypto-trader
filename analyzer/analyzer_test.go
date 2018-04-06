@@ -6,10 +6,10 @@ import (
     "time"
 )
 
-var mockPositions = []db.InvestmentPosition{
-    { Id:1, Amount:1, Value:1.0, Timestamp:time.Now() },
-    { Id:2, Amount:5, Value:3.0, Timestamp:time.Now() },
-    { Id:3, Amount:5, Value:5.0, Timestamp:time.Now() }}
+var mockPositions = []db.TradingPosition{
+    { Id:1, Amount:1, Value:1.0, Timestamp:time.Now().Unix() },
+    { Id:2, Amount:5, Value:3.0, Timestamp:time.Now().Unix() },
+    { Id:3, Amount:5, Value:5.0, Timestamp:time.Now().Unix() }}
 
 func TestGetOptimalPurchasePrice(t *testing.T) {
     optimalPurchasePrice := GetOptimalPurchasePrice(mockPositions)

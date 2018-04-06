@@ -28,13 +28,13 @@ func (s *TimeSlot) Init(interval int64) {
 
 func (s *TimeSlot) IsFree() bool {
     s.mutex.Lock()
-    if s.last > time.Now().Unix() - s.interval {
-        return false
-    } else {
+    if s.last <= time.Now().Unix() - s.interval {
         s.last = time.Now().Unix()
+	s.mutex.Unlock()
         return true
     }
     s.mutex.Unlock()
+    return false;
 }
 
 type AccountBalance struct {

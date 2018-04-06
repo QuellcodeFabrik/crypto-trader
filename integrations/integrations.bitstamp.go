@@ -19,7 +19,6 @@ import (
     "time"
     "os"
     "sync"
-    "encoding/asn1"
 )
 
 var once sync.Once
